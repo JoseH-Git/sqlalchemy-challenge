@@ -41,8 +41,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start><end>"
+        f"/api/v1.0/start<br/>"
+        f"/api/v1.0/start_date/end_date"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -68,7 +68,7 @@ def stations():
 
     """Return a list of precipitations"""
     # Query all stations
-    results = session.query(measurement.station).all()
+    results = session.query(measurement.station).distinct().all()
 
     session.close()
 
@@ -103,6 +103,39 @@ def tobs():
     #return jsonify(most_active)
     return jsonify(query_temp)
 
+@app.route("/api/v1.0/<date>")
+def date():
+
+    """Fetch the Justice League character whose real_name matches
+       the path variable supplied by the user, or a 404 if not."""
+
+    canonicalized = measurement.replace(" ", "").lower()
+    for date in measurement:
+        search_term = date["date"].replace(" ", "").lower()
+
+        if search_term == canonicalized:
+            return jsonify(measurement)
+
+    return jsonify({"error": f"Character with real_name {real_name} not found."}), 404
+
+
+
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    """Return a list of precipitations"""
+    # Query all stations
+    results = session.query(measurement.date).all()
+ 
+    start_date = [measurement.station, func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)]
+
+
+    session.close()
+
+    # Convert list of tuples into normal list
+    all_stations = list(np.ravel(results))
+    
+    return jsonify(all_stations)
 
 
 if __name__ == '__main__':
