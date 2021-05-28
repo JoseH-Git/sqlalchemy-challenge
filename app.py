@@ -1,23 +1,67 @@
-# 1. import Flask
-from flask import Flask
+import numpy as np
 
-# 2. Create an app, being sure to pass __name__
+import sqlalchemy
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, func
+
+from flask import Flask, jsonify
+
+
+#################################################
+# Database Setup
+#################################################
+engine = create_engine("sqlite:///./Resources/hawaii.sqlite")
+
+# reflect an existing database into a new model
+Base = automap_base()
+# reflect the tables
+Base.prepare(engine, reflect=True)
+
+# Save reference to the table
+measurement = Base.classes.measurement
+station = Base.classes.station 
+
+
+#################################################
+# Flask Setup
+#################################################
 app = Flask(__name__)
 
 
-# 3. Define what to do when a user hits the index route
+#################################################
+# Flask Routes
+#################################################
+
 @app.route("/")
-def home():
-    print("Server received request for 'Home' page...")
-    return "Welcome to my 'Home' page!"
+def welcome():
+    """List all available api routes."""
+    return (
+        f"Available Routes:<br/>"
+        f"//api/v1.0/precipitation<br/>"
+        f"/api/v1.0/stations<br/>"
+        f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/<start><br/>"
+        f"/api/v1.0/<start>/<end>"
+    )
+
+@app.route("/api/v1.0/precipitation")
+def precipitation():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    """Return a list of precipitations"""
+    # Query all passengers
+    results = session.query(measurement.date).all()
+
+    session.close()
+
+    # Convert list of tuples into normal list
+    all_measurment = list(np.ravel(results))
+
+    return jsonify(all_measurment)
 
 
-# 4. Define what to do when a user hits the /about route
-@app.route("/about")
-def about():
-    print("Server received request for 'About' page...")
-    return "Welcome to my 'About' page!"
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
