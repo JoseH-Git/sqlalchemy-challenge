@@ -1,32 +1,23 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": []
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.8.5"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 4
-}
+# 1. import Flask
+from flask import Flask
+
+# 2. Create an app, being sure to pass __name__
+app = Flask(__name__)
+
+
+# 3. Define what to do when a user hits the index route
+@app.route("/")
+def home():
+    print("Server received request for 'Home' page...")
+    return "Welcome to my 'Home' page!"
+
+
+# 4. Define what to do when a user hits the /about route
+@app.route("/about")
+def about():
+    print("Server received request for 'About' page...")
+    return "Welcome to my 'About' page!"
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
