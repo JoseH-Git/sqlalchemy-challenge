@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 import datetime as dt
 from flask import Flask, jsonify
+from sqlalchemy.sql.operators import notendswith_op
 
 
 #################################################
@@ -102,7 +103,6 @@ def tobs():
                   filter(measurement.date >= query_date).order_by(measurement.date.desc()).all()
     data_query_temp
 
-    
 
     # Convert list of tuples into normal list
     most_active = list(np.ravel(most_active_station))
@@ -115,13 +115,7 @@ def tobs():
 def start_date(start_date):
     # Create our session (link) from Python to the DB
     session = Session(engine)
-    """Fetch the Justice League character whose real_name matches
-       the path variable supplied by the user, or a 404 if not."""
-
-    #canonicalized = measurement.replace(" ", "").lower()
     
-    # Using the most active station id from the previous query, calculate the lowest, highest, and average temperature.
-
     temperature_func = [measurement.station, func.min(measurement.tobs),\
     func.max(measurement.tobs), func.avg(measurement.tobs)]
 
@@ -132,18 +126,10 @@ def start_date(start_date):
     
     return jsonify(temperature_date)
 
-    #return jsonify({"error": f"Character with real_name {real_name} not found."}), 404
-
 @app.route("/api/v1.0/<start_date>/<end_date>")
 def range_date(start_date,end_date):
     # Create our session (link) from Python to the DB
     session = Session(engine)
-    """Fetch the Justice League character whose real_name matches
-       the path variable supplied by the user, or a 404 if not."""
-
-    #canonicalized = measurement.replace(" ", "").lower()
-    
-    # Using the most active station id from the previous query, calculate the lowest, highest, and average temperature.
 
     temperature_func = [measurement.station, func.min(measurement.tobs),\
     func.max(measurement.tobs), func.avg(measurement.tobs)]
@@ -153,9 +139,9 @@ def range_date(start_date,end_date):
     order_by(func.count(measurement.station).desc()).all()
     session.close()
     
-    return jsonify(temperature_date_range)
+    query_temp = list(np.ravel(temperature_date_range))
 
-    #return jsonify({"error": f"Character with real_name {start_date} ot {end_date} not found."}), 404
+    return jsonify(query_temp)
 
 if __name__ == '__main__':
     app.run(debug=True)
