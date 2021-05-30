@@ -53,13 +53,18 @@ def precipitation():
     """Return a list of precipitations"""
     # Query all precipitation dates
     results = session.query(measurement.date,measurement.prcp).all()
-
+    
     session.close()
+    
+    all_measurement = []
+    
+    for date, prcp in results:
+        measurement_dict = {}
+        measurement_dict["date"] = date
+        measurement_dict["prcp"] = prcp
+        all_measurement.append(measurement_dict)
 
-    # Convert list of tuples into normal list
-    all_measurment = list(np.ravel(results))
-
-    return jsonify(all_measurment)
+    return jsonify(all_measurement)
 
 @app.route("/api/v1.0/stations")
 def stations():
@@ -97,46 +102,60 @@ def tobs():
                   filter(measurement.date >= query_date).order_by(measurement.date.desc()).all()
     data_query_temp
 
+    
+
     # Convert list of tuples into normal list
     most_active = list(np.ravel(most_active_station))
     query_temp = list(np.ravel(data_query_temp))
     #return jsonify(most_active)
+    
     return jsonify(query_temp)
 
-@app.route("/api/v1.0/<date>")
-def date():
-
+@app.route("/api/v1.0/<start_date>")
+def start_date(start_date):
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
     """Fetch the Justice League character whose real_name matches
        the path variable supplied by the user, or a 404 if not."""
 
-    canonicalized = measurement.replace(" ", "").lower()
-    for date in measurement:
-        search_term = date["date"].replace(" ", "").lower()
+    #canonicalized = measurement.replace(" ", "").lower()
+    
+    # Using the most active station id from the previous query, calculate the lowest, highest, and average temperature.
 
-        if search_term == canonicalized:
-            return jsonify(measurement)
+    temperature_func = [measurement.station, func.min(measurement.tobs),\
+    func.max(measurement.tobs), func.avg(measurement.tobs)]
 
-    return jsonify({"error": f"Character with real_name {real_name} not found."}), 404
+    temperature_date = session.query(*temperature_func).group_by(measurement.station).\
+    filter(measurement.date >= start_date).order_by(func.count(measurement.station).desc()).all()
+    
+    session.close()
+    
+    return jsonify(temperature_date)
 
+    #return jsonify({"error": f"Character with real_name {real_name} not found."}), 404
 
-
+@app.route("/api/v1.0/<start_date>/<end_date>")
+def range_date(start_date,end_date):
     # Create our session (link) from Python to the DB
     session = Session(engine)
+    """Fetch the Justice League character whose real_name matches
+       the path variable supplied by the user, or a 404 if not."""
 
-    """Return a list of precipitations"""
-    # Query all stations
-    results = session.query(measurement.date).all()
- 
-    start_date = [measurement.station, func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)]
-
-
-    session.close()
-
-    # Convert list of tuples into normal list
-    all_stations = list(np.ravel(results))
+    #canonicalized = measurement.replace(" ", "").lower()
     
-    return jsonify(all_stations)
+    # Using the most active station id from the previous query, calculate the lowest, highest, and average temperature.
 
+    temperature_func = [measurement.station, func.min(measurement.tobs),\
+    func.max(measurement.tobs), func.avg(measurement.tobs)]
+
+    temperature_date_range = session.query(*temperature_func).group_by(measurement.station).\
+    filter(measurement.date >= start_date).filter(measurement.date <= end_date).\
+    order_by(func.count(measurement.station).desc()).all()
+    session.close()
+    
+    return jsonify(temperature_date_range)
+
+    #return jsonify({"error": f"Character with real_name {start_date} ot {end_date} not found."}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
