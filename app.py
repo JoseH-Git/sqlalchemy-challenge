@@ -131,6 +131,8 @@ def range_date(start_date,end_date):
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
+    dates = []
+
     temperature_func = [measurement.station, func.min(measurement.tobs),\
     func.max(measurement.tobs), func.avg(measurement.tobs)]
 
@@ -138,10 +140,12 @@ def range_date(start_date,end_date):
     filter(measurement.date >= start_date).filter(measurement.date <= end_date).\
     order_by(func.count(measurement.station).desc()).all()
     session.close()
-    
-    query_temp = list(np.ravel(temperature_date_range))
 
-    return jsonify(query_temp)
+    for row in temperature_date_range:
+        dates.append({'Min':row[0],'Max':row[1],'Avg':row[2]})
+    session.close()
+
+    return jsonify(dates)
 
 if __name__ == '__main__':
     app.run(debug=True)
