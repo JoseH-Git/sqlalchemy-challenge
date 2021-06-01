@@ -133,7 +133,7 @@ def range_date(start_date,end_date):
 
     dates = []
 
-    temperature_func = [measurement.station, func.min(measurement.tobs),\
+    temperature_func = [func.min(measurement.tobs),\
     func.max(measurement.tobs), func.avg(measurement.tobs)]
 
     temperature_date_range = session.query(*temperature_func).group_by(measurement.station).\
